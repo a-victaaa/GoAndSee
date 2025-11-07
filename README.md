@@ -1,4 +1,5 @@
 # GoAndSee
 trial for my first project
 
-Let's G!
+Let's G! hahahaha
+
