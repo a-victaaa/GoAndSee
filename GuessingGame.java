@@ -5,10 +5,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * GameInterface.java
- * GUI interface for the CharaQuest 20 questions guessing game.
- */
 public class GameInterface extends JFrame {
     
     private GuessingGame game;
