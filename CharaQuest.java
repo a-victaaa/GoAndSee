@@ -1,5 +1,6 @@
 package com.charaquest;
 import javax.swing.*;
+import java.awt.Window;
 
 public class CharaQuest {
     
