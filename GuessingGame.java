@@ -1,265 +1,291 @@
 package com.charaquest;
 
-import java.util.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
- * GuessingGame.java
- * Manages the game state and logic for the 20 questions guessing game.
- * Handles tree traversal, game states, and answer processing.
+ * GameInterface.java
+ * GUI interface for the CharaQuest 20 questions guessing game.
  */
-
-public class GuessingGame {
+public class GameInterface extends JFrame {
     
-    // Game states
-    public enum GameState {
-        NOT_STARTED,    // Game hasn't begun
-        PLAYING,        // Asking questions
-        GUESSING,       // Made a character guess, waiting for confirmation
-        WON,           // AI guessed correctly
-        LOST,          // AI guessed incorrectly
-        ERROR          // Something went wrong
+    private GuessingGame game;
+    private JPanel mainPanel;
+    private CardLayout cardLayout;
+    
+    // Welcome Screen
+    private JPanel welcomePanel;
+    private JButton startButton;
+    
+    // Game Screen
+    private JPanel gamePanel;
+    private JLabel questionLabel;
+    private JLabel statusLabel;
+    private JButton yesButton;
+    private JButton noButton;
+    private JButton confirmCorrectButton;
+    private JButton confirmWrongButton;
+    private JTextArea answerHistoryArea;
+    
+    // Result Screen
+    private JPanel resultPanel;
+    private JLabel resultLabel;
+    private JButton playAgainButton;
+    private JButton exitButton;
+    
+    public GameInterface(GuessingGame game) {
+        this.game = game;
+        initializeGUI();
+        setupEventHandlers();
+        showWelcomeScreen();
     }
     
-    private DecisionNode rootNode;           // Root of the decision tree
-    private DecisionNode currentNode;        // Current position in tree
-    private GameState gameState;             // Current game state
-     private List<String> answerPath;         // History of answers (for debugging)
-    private String currentGuess;             // Current character guess
-    private int questionCount;               // Number of questions asked
-    private static final int MAX_QUESTIONS = 20;
-    
-    /**
-     * Constructor - initializes the game
-     */
-    public GuessingGame() {
-        initializeDecisionTree();
-        resetGame();
+    private void initializeGUI() {
+        setTitle("CharaQuest - Team Member Guessing Game");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(600, 500);
+        setLocationRelativeTo(null);
+        
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+        
+        createWelcomeScreen();
+        createGameScreen();
+        createResultScreen();
+        
+        add(mainPanel);
     }
     
-    /**
-     * Initialize the decision tree with questions and characters
-     */
-    private void initializeDecisionTree() {
-        // Root node: Gender classification
-        rootNode = new DecisionNode("Is the person female?");
-
-        // --- FEMALE BRANCH (YES) ---
-        DecisionNode femaleNode = new DecisionNode("Does the person have long hair?");
-        rootNode.setYesNode(femaleNode);
-
-        // Female -> Long Hair (YES -> YES)
-        DecisionNode angelica = new DecisionNode("Angelica", true);
-        femaleNode.setYesNode(angelica);
-
-        // Female -> Short Hair (YES -> NO)
-        DecisionNode alleahJane = new DecisionNode("Alleah Jane", true);
-        femaleNode.setNoNode(alleahJane);
-
-        // --- MALE BRANCH (NO) ---
-        DecisionNode maleNode = new DecisionNode("Is the person's height above 5'7\"?");
-        rootNode.setNoNode(maleNode);
-
-        // Male -> Height above 5'7" (NO -> YES)
-        DecisionNode tallMaleNode = new DecisionNode("Is the person a class officer?");
-        maleNode.setYesNode(tallMaleNode);
-
-        // Tall Male -> Not Officer (NO -> YES -> NO)
-        DecisionNode michaelAngelo = new DecisionNode("Michael Angelo", true);
-        tallMaleNode.setNoNode(michaelAngelo);
-
-        // Tall Male -> Officer (NO -> YES -> YES)
-        DecisionNode robertLheon = new DecisionNode("Robert Lheon", true);
-        tallMaleNode.setYesNode(robertLheon);
-
-        // Male -> Height below 5'7" (NO -> NO)
-        DecisionNode tommyLee = new DecisionNode("Tommy Lee", true);
-        maleNode.setNoNode(tommyLee);
+    private void createWelcomeScreen() {
+        welcomePanel = new JPanel();
+        welcomePanel.setLayout(new BoxLayout(welcomePanel, BoxLayout.Y_AXIS));
+        welcomePanel.setBackground(new Color(240, 248, 255));
+        welcomePanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        
+        JLabel titleLabel = new JLabel("CharaQuest");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 36));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JLabel descriptionLabel = new JLabel("<html><div style='text-align: center;'>" +
+                "Think of a team member and I'll try to guess who it is!<br><br>" +
+                "Team members: Angelica, Alleah Jane, Michael Angelo, Robert Lheon, Tommy Lee" +
+                "</div></html>");
+        descriptionLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        descriptionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        startButton = new JButton("Start Game");
+        startButton.setFont(new Font("Arial", Font.BOLD, 16));
+        startButton.setPreferredSize(new Dimension(150, 40));
+        startButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        startButton.setBackground(new Color(34, 139, 34));
+        startButton.setForeground(Color.WHITE);
+        
+        welcomePanel.add(Box.createVerticalGlue());
+        welcomePanel.add(titleLabel);
+        welcomePanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        welcomePanel.add(descriptionLabel);
+        welcomePanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        welcomePanel.add(startButton);
+        welcomePanel.add(Box.createVerticalGlue());
+        
+        mainPanel.add(welcomePanel, "WELCOME");
     }
     
-    /**
-     * Start a new game
-     */
-    public void startNewGame() {
-        resetGame();
-        gameState = GameState.PLAYING;
+    private void createGameScreen() {
+        gamePanel = new JPanel(new BorderLayout());
+        gamePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        JPanel topPanel = new JPanel();
+        statusLabel = new JLabel("Question 1 of 20");
+        statusLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        topPanel.add(statusLabel);
+        
+        JPanel centerPanel = new JPanel();
+        centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
+        
+        questionLabel = new JLabel("Think of a team member and click Yes/No!");
+        questionLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        questionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        yesButton = new JButton("Yes");
+        noButton = new JButton("No");
+        confirmCorrectButton = new JButton("Correct!");
+        confirmWrongButton = new JButton("Wrong");
+        
+        yesButton.setPreferredSize(new Dimension(100, 40));
+        noButton.setPreferredSize(new Dimension(100, 40));
+        confirmCorrectButton.setPreferredSize(new Dimension(100, 40));
+        confirmWrongButton.setPreferredSize(new Dimension(100, 40));
+        
+        yesButton.setBackground(new Color(34, 139, 34));
+        yesButton.setForeground(Color.WHITE);
+        noButton.setBackground(new Color(220, 20, 60));
+        noButton.setForeground(Color.WHITE);
+        confirmCorrectButton.setBackground(new Color(34, 139, 34));
+        confirmCorrectButton.setForeground(Color.WHITE);
+        confirmWrongButton.setBackground(new Color(220, 20, 60));
+        confirmWrongButton.setForeground(Color.WHITE);
+        
+        buttonPanel.add(yesButton);
+        buttonPanel.add(noButton);
+        buttonPanel.add(confirmCorrectButton);
+        buttonPanel.add(confirmWrongButton);
+        
+        centerPanel.add(Box.createVerticalGlue());
+        centerPanel.add(questionLabel);
+        centerPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        centerPanel.add(buttonPanel);
+        centerPanel.add(Box.createVerticalGlue());
+        
+        answerHistoryArea = new JTextArea(6, 40);
+        answerHistoryArea.setEditable(false);
+        answerHistoryArea.setFont(new Font("Arial", Font.PLAIN, 12));
+        answerHistoryArea.setBackground(new Color(245, 245, 245));
+        JScrollPane scrollPane = new JScrollPane(answerHistoryArea);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Answer History"));
+        
+        gamePanel.add(topPanel, BorderLayout.NORTH);
+        gamePanel.add(centerPanel, BorderLayout.CENTER);
+        gamePanel.add(scrollPane, BorderLayout.SOUTH);
+        
+        mainPanel.add(gamePanel, "GAME");
     }
     
-    /**
-     * Reset game to initial state
-     */
-    private void resetGame() {
-        currentNode = rootNode;
-        gameState = GameState.NOT_STARTED;
-        answerPath = new ArrayList<>();
-        currentGuess = null;
-        questionCount = 0;
+    private void createResultScreen() {
+        resultPanel = new JPanel();
+        resultPanel.setLayout(new BoxLayout(resultPanel, BoxLayout.Y_AXIS));
+        resultPanel.setBackground(new Color(240, 248, 255));
+        resultPanel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
+        
+        resultLabel = new JLabel("Game Over");
+        resultLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        resultLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        playAgainButton = new JButton("Play Again");
+        exitButton = new JButton("Exit");
+        
+        playAgainButton.setPreferredSize(new Dimension(120, 40));
+        exitButton.setPreferredSize(new Dimension(120, 40));
+        playAgainButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        exitButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        buttonPanel.add(playAgainButton);
+        buttonPanel.add(exitButton);
+        
+        resultPanel.add(Box.createVerticalGlue());
+        resultPanel.add(resultLabel);
+        resultPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+        resultPanel.add(buttonPanel);
+        resultPanel.add(Box.createVerticalGlue());
+        
+        mainPanel.add(resultPanel, "RESULT");
     }
     
-    /**
-     * Process a "Yes" answer
-     */
-    public boolean answerYes() {
-        return processAnswer(true);
-    }
-
-    /**
-     * Process a "No" answer
-     */
-    public boolean answerNo() {
-        return processAnswer(false);
+    private void setupEventHandlers() {
+        startButton.addActionListener(e -> startGame());
+        yesButton.addActionListener(e -> answerYes());
+        noButton.addActionListener(e -> answerNo());
+        confirmCorrectButton.addActionListener(e -> confirmCorrect());
+        confirmWrongButton.addActionListener(e -> confirmWrong());
+        playAgainButton.addActionListener(e -> restartGame());
+        exitButton.addActionListener(e -> exitGame());
     }
     
-    /**
-     * Process an answer and move to the next node
-     */
-    private boolean processAnswer(boolean isYes) {
-        if (gameState != GameState.PLAYING) {
-            return false;
+    private void startGame() {
+        game.startNewGame();
+        updateGameDisplay();
+        showGameScreen();
+    }
+    
+    private void answerYes() {
+        game.answerYes();
+        updateGameDisplay();
+    }
+    
+    private void answerNo() {
+        game.answerNo();
+        updateGameDisplay();
+    }
+    
+    private void confirmCorrect() {
+        game.confirmGuessCorrect();
+        showResultScreen();
+    }
+    
+    private void confirmWrong() {
+        game.confirmGuessIncorrected();
+        showResultScreen();
+    }
+    
+    private void restartGame() {
+        game = new GuessingGame();
+        showWelcomeScreen();
+    }
+    
+    private void exitGame() {
+        System.exit(0);
+    }
+    
+    private void updateGameDisplay() {
+        statusLabel.setText(game.getStatusMessage());
+        
+        if (game.isPlaying()) {
+            questionLabel.setText(game.getCurrentQuestion());
+            yesButton.setVisible(true);
+            noButton.setVisible(true);
+            confirmCorrectButton.setVisible(false);
+            confirmWrongButton.setVisible(false);
+        } else if (game.isGuessing()) {
+            questionLabel.setText("Is your team member " + game.getCurrentGuess() + "?");
+            yesButton.setVisible(false);
+            noButton.setVisible(false);
+            confirmCorrectButton.setVisible(true);
+            confirmWrongButton.setVisible(true);
+        } else if (game.isGameOver()) {
+            showResultScreen();
+            return;
         }
         
-        // Record the answer
-        answerPath.add(isYes ? "YES" : "NO");
-        questionCount++;
+        updateAnswerHistory();
+    }
+    
+    private void updateAnswerHistory() {
+        StringBuilder history = new StringBuilder();
+        history.append("Questions Asked: ").append(game.getQuestionCount()).append("\n");
+        history.append("Remaining: ").append(game.getRemainingQuestions()).append("\n\n");
         
-        // Move to the next node
-        currentNode = isYes ? currentNode.getYesNode() : currentNode.getNoNode();
-        
-        if (currentNode == null) {
-            gameState = GameState.ERROR;
-            return false;
-        }
-        
-        // Check if we've reached a character (leaf node)
-        if (currentNode.isCharacterNode()) {
-            gameState = GameState.GUESSING;
-        currentGuess = currentNode.getCharacter();
-            return true;
+        if (!game.getAnswerPath().isEmpty()) {
+            history.append("Your Answers: ");
+            history.append(game.getAnswerPathString());
         }
         
-        // Check if we've asked too many questions
-        if (questionCount >= MAX_QUESTIONS) {
-            gameState = GameState.LOST;
-            return true;
+        answerHistoryArea.setText(history.toString());
+    }
+    
+    private void showWelcomeScreen() {
+        cardLayout.show(mainPanel, "WELCOME");
+    }
+    
+    private void showGameScreen() {
+        cardLayout.show(mainPanel, "GAME");
+    }
+    
+    private void showResultScreen() {
+        if (game.getGameState() == GuessingGame.GameState.WON) {
+            resultLabel.setText("<html><div style='text-align: center;'>" +
+                    "<h2>🎉 I Won! 🎉</h2>" +
+                    "<p>I guessed your team member in " + game.getQuestionCount() + " questions!</p>" +
+                    "<p>It was: " + game.getCurrentGuess() + "</p></div></html>");
+        } else {
+            resultLabel.setText("<html><div style='text-align: center;'>" +
+                    "<h2>😅 You Got Me! 😅</h2>" +
+                    "<p>I couldn't guess your team member.</p></div></html>");
         }
         
-        // Continue playing
-        return true;
-    }
-    
-    /**
-     * Confirm that the guess was correct
-     */
-    public void confirmGuessCorrect() {
-        if (gameState == GameState.GUESSING) {
-            gameState = GameState.WON;
-        }
-    }
-    
-    /**
-     * Confirm that the guess was incorrect
-     */
-    public void confirmGuessIncorrect() {
-        if (gameState == GameState.GUESSING) {
-            gameState = GameState.LOST;
-        }
-    }
-         // Getters
-    public String getCurrentQuestion() {
-        if (currentNode != null && currentNode.isQuestionNode()) {
-            return currentNode.getQuestion();
-        }
-        return null;
-    }
-    
-    public String getCurrentGuess() {
-        return currentGuess;
-    }
-    
-    public GameState getGameState() {
-        return gameState;
-    }
-    
-    public int getQuestionCount() {
-        return questionCount;
-    }
-    
-    public int getMaxQuestions() {
-        return MAX_QUESTIONS;
-    }
-    
-    public List<String> getAnswerPath() {
-        return new ArrayList<>(answerPath);
-    }
-    
-    public String getAnswerPathString() {
-        return String.join(" -> ", answerPath);
-    }
-
-     /**
-     * Get a status message based on current game state
-     */
-    public String getStatusMessage() {
-        switch (gameState) {
-            case NOT_STARTED:
-                return "Click 'Start Game' to begin!";
-            case PLAYING:
-                return "Question " + (questionCount + 1) + " of " + MAX_QUESTIONS;
-            case GUESSING:
-                return "Is my guess correct?";
-            case WON:
-                return "I won! I guessed your team member in " + questionCount + " questions!";
-            case LOST:
-                if (questionCount >= MAX_QUESTIONS) {
-                    return "You stumped me! I ran out of questions.";
-                } else {
-                    return "You got me! I couldn't guess your team member.";
-                }
-            case ERROR:
-                return "Oops! Something went wrong. Please start a new game.";
-            default:
-                return "Unknown game state";
-        }
-    }
-    
-    /**
-     * Check if the game is over
-     */
-    public boolean isGameOver() {
-        return gameState == GameState.WON || 
-               gameState == GameState.LOST || 
-               gameState == GameState.ERROR;
-    }
-    
-    /**
-     * Check if we're currently asking questions
-     */
-    public boolean isPlaying() {
-        return gameState == GameState.PLAYING;
-    }
-    
-    /**
-     * Check if we're waiting for guess confirmation
-     */
-    public boolean isGuessing() {
-        return gameState == GameState.GUESSING;
-    }
-    
-    /**
-     * Get remaining questions
-     */
-    public int getRemainingQuestions() {
-        return Math.max(0, MAX_QUESTIONS - questionCount);
-    }
-    
-    /**
-     * Debug method to print current state */
-    public void printDebugInfo() {
-        System.out.println("=== GAME DEBUG INFO ===");
-        System.out.println("Game State: " + gameState);
-        System.out.println("Question Count: " + questionCount);
-        System.out.println("Current Node: " + (currentNode != null ? currentNode.toString() : "null"));
-        System.out.println("Answer Path: " + getAnswerPathString());
-        System.out.println("Current Guess: " + currentGuess);
-        System.out.println("======================");
+        cardLayout.show(mainPanel, "RESULT");
     }
 }
