@@ -12,7 +12,6 @@ public class CharaQuest {
             System.out.println("Could not set system look and feel: " + e.getMessage());
         }
         
-        // Create and run the GUI on the Event Dispatch Thread
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
