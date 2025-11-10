@@ -4,7 +4,7 @@ A Java Swing application that plays 20 questions to guess which team member you'
 
 ## Team Members
 - Angelica
-- Alleah Jane  
+- Alleah Jane
 - Michael Angelo
 - Robert Lheon
 - Tommy Lee
