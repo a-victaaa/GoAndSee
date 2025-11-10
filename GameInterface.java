@@ -5,10 +5,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-/**
- * GameInterface.java
- * The Graphical User Interface (GUI) for the CharaQuest game using CardLayout.
- */
 public class GameInterface extends JFrame implements ActionListener {
 
     private GuessingGame game;
