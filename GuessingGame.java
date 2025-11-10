@@ -36,12 +36,12 @@ public class GuessingGame {
         DecisionNode alleahJane = new DecisionNode("Alleah Jane", true);
         femaleNode.setNoNode(alleahJane);
 
-        DecisionNode maleNode = new DecisionNode("Is the person's height above 5'7\"?");
+        DecisionNode maleNode = new DecisionNode("Is the person's height above 5'7?");
         rootNode.setNoNode(maleNode);
         DecisionNode tallMaleNode = new DecisionNode("Is the person a class officer?");
         maleNode.setYesNode(tallMaleNode);
         DecisionNode michaelAngelo = new DecisionNode("Michael Angelo", true);
-        tallMaleNode.setNoNode(michaelAngel
+        tallMaleNode.setNoNode(michaelAngelo);
         DecisionNode robertLheon = new DecisionNode("Robert Lheon", true);
         tallMaleNode.setYesNode(robertLheon);
         DecisionNode tommyLee = new DecisionNode("Tommy Lee", true);
@@ -53,11 +53,11 @@ public class GuessingGame {
         gameState = GameState.PLAYING;
     }
     
-    private void resetGame() 
+    private void resetGame() {
         currentNode = rootNode;
         gameState = GameState.NOT_STARTED;
         answerPath = new ArrayList<>();
-        currentGuess =
+        currentGuess = null;
         questionCount = 0;
     }
 
