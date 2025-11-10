@@ -9,11 +9,8 @@ public class GameInterface extends JFrame implements ActionListener {
 
     private GuessingGame game;
 
-    // UI Components for the main layout
     private CardLayout cardLayout = new CardLayout();
-    private JPanel mainPanel; // Panel that holds WELCOME, GAME, and RESULT cards
-
-    // Components for GAME card
+    private JPanel mainPanel; 
     private JLabel statusLabel;
     private JLabel questionLabel;
     private JButton yesButton;
@@ -21,14 +18,9 @@ public class GameInterface extends JFrame implements ActionListener {
     private JButton confirmCorrectButton;
     private JButton confirmWrongButton;
     private JTextArea answerHistoryArea;
-
-    // Components for WELCOME/RESULT cards
-    private JLabel resultLabel; // Used for the result screen message
+    private JLabel resultLabel; 
     private JButton startButton;
 
-    /**
-     * Constructor sets up the main window and components.
-     */
     public GameInterface(GuessingGame game) {
         this.game = game;
 
@@ -37,25 +29,18 @@ public class GameInterface extends JFrame implements ActionListener {
         setJMenuBar(setupMenuBar());
 
         mainPanel = new JPanel(cardLayout);
-
-        // 1. Setup the Welcome Screen Card
         mainPanel.add(createWelcomePanel(), "WELCOME");
-        // 2. Setup the Game Screen Card
         mainPanel.add(createGamePanel(), "GAME");
-        // 3. Setup the Result Screen Card
         mainPanel.add(createResultPanel(), "RESULT");
 
         add(mainPanel);
 
-        // Final window setup
         pack();
-        setLocationRelativeTo(null); // Center the window
+        setLocationRelativeTo(null); 
         setResizable(false);
-        showWelcomeScreen(); // Start on the welcome screen
+        showWelcomeScreen();
     }
     
-    // --- Panel Setup Methods ---
-
     private JPanel createWelcomePanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(50, 50, 50, 50));
@@ -79,15 +64,12 @@ public class GameInterface extends JFrame implements ActionListener {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Top: Status
         statusLabel = new JLabel("Status: Initializing...", SwingConstants.CENTER);
         statusLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         panel.add(statusLabel, BorderLayout.NORTH);
 
-        // Center: Question and History
         JPanel centerPanel = new JPanel(new GridLayout(1, 2, 10, 0));
-        
-        // Left - Question
+
         JPanel questionPanel = new JPanel();
         questionPanel.setLayout(new BoxLayout(questionPanel, BoxLayout.Y_AXIS));
         questionPanel.setBorder(BorderFactory.createTitledBorder("Question"));
@@ -102,7 +84,6 @@ public class GameInterface extends JFrame implements ActionListener {
         
         centerPanel.add(questionPanel);
 
-        // Right - History
         answerHistoryArea = new JTextArea(10, 15);
         answerHistoryArea.setEditable(false);
         answerHistoryArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -112,7 +93,6 @@ public class GameInterface extends JFrame implements ActionListener {
 
         panel.add(centerPanel, BorderLayout.CENTER);
 
-        // Bottom: Buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
         yesButton = new JButton("Yes");
         noButton = new JButton("No");
@@ -175,8 +155,6 @@ public class GameInterface extends JFrame implements ActionListener {
         menuBar.add(gameMenu);
         return menuBar;
     }
-
-    // --- Action Handling ---
     
     @Override
     public void actionPerformed(ActionEvent e) {
@@ -189,12 +167,9 @@ public class GameInterface extends JFrame implements ActionListener {
         } else if (e.getSource() == confirmCorrectButton) {
             game.confirmGuessCorrect();
         } else if (e.getSource() == confirmWrongButton) {
-            // Note: The original suggestion had confirmGuessIncorrected(), 
-            // but the code in GuessingGame is confirmGuessIncorrect().
             game.confirmGuessIncorrect(); 
         }
 
-        // Handle screen transitions
         if (game.getGameState() == GuessingGame.GameState.GUESSING) {
             updateGameDisplay();
         } else if (game.isGameOver()) {
@@ -203,8 +178,6 @@ public class GameInterface extends JFrame implements ActionListener {
             updateGameDisplay();
         }
     }
-    
-    // --- Game Logic Methods ---
 
     private void handleStartGame() {
         game.startNewGame();
@@ -213,22 +186,15 @@ public class GameInterface extends JFrame implements ActionListener {
     }
     
     private void restartGame() {
-        // Since CharaQuest main method creates a new instance of GameInterface
-        // and GuessingGame, we use the static restart method.
-        // This is necessary to properly clean up the old window on the EDT.
         CharaQuest.restartGame(); 
     }
     
     private void exitGame() {
         System.exit(0);
     }
-
-    // --- UI Update Methods ---
     
     private void updateGameDisplay() {
         statusLabel.setText(game.getStatusMessage());
-        
-        // Button visibility logic
         if (game.isPlaying()) {
             questionLabel.setText(game.getCurrentQuestion());
             yesButton.setVisible(true);
@@ -244,7 +210,7 @@ public class GameInterface extends JFrame implements ActionListener {
         }
         
         updateAnswerHistory();
-        pack(); // Re-pack to adjust size if text length changes
+        pack();
     }
     
     private void updateAnswerHistory() {
@@ -254,10 +220,8 @@ public class GameInterface extends JFrame implements ActionListener {
         
         if (!game.getAnswerPath().isEmpty()) {
             history.append("Your Answers: \n");
-            // Display path line-by-line or with clear separators
             String path = String.join(" -> ", game.getAnswerPath());
             
-            // Simple word-wrap attempt for history:
             int maxLineLength = 40; 
             while (path.length() > maxLineLength) {
                 int lastSpace = path.substring(0, maxLineLength).lastIndexOf(' ');
